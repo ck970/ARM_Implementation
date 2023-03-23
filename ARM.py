@@ -5,14 +5,14 @@ import numpy as np
 import itertools
 import time
 
-def create_ex_df():
-    '''
-    :return: df that is of the same form of your df after you use loadarff
-    '''
-    products_data, products_meta = loadarff('basket.arff')
-    columns = ['col{}'.format(i+1) for i in range(10)]
+def load_file():
 
-    df = pd.DataFrame(data, columns=columns)
+    data, meta = loadarff('basket.arff')
+    df = pd.DataFrame(data)
+    i = 0
+    for dtype in df.dtypes:
+        df[df.columns[i]] = df[df.columns[i]].str.decode("utf-8")
+        i += 1
 
     return df
 
@@ -30,7 +30,7 @@ def transform_dict_to_set(dict_vals_0_1):
     :param dict_vals_0_1: dictionary where the values are 0 and 1 corresponding to if key is present
     :return: set of only those cols that are 'present'
     '''
-    return set(key for key, val in dict_vals_0_1.items() if val == 1)
+    return set(key for key, val in dict_vals_0_1.items() if val == '1')
 
 def transform_ah_to_arr_sets(arr_hash):
     '''
@@ -54,13 +54,14 @@ def a_subset_b(set_a, set_b):
 
 
 def main():
-    ex_df = create_ex_df()
-    arr_hash = transform_df_arr_hash(ex_df)
+    df = load_file()
+    arr_hash = transform_df_arr_hash(df)
     arr_sets = transform_ah_to_arr_sets(arr_hash)
-    print(arr_sets)
 
-    a_subset_b({1,2}, {1,2,3})
-    a_subset_b({1, 4}, {1, 2, 3})
+    # Found out how to get the names of columns that are present in a given transaction
+
+    print(a_subset_b({1,2}, {1,2,3}))
+    print(a_subset_b({1, 4}, {1, 2, 3}))
 
 
 if __name__ == '__main__':
