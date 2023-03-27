@@ -57,11 +57,12 @@ def main():
     df = load_file()
     arr_hash = transform_df_arr_hash(df)
     arr_sets = transform_ah_to_arr_sets(arr_hash)
+    print(arr_sets[0])
 
-    # Found out how to get the names of columns that are present in a given transaction
+    # Found out how to get the names of columns that are present in a given transaction, now need to order them
 
-    print(a_subset_b({1,2}, {1,2,3}))
-    print(a_subset_b({1, 4}, {1, 2, 3}))
+    # print(a_subset_b({1,2}, {1,2,3}))
+    # print(a_subset_b({1, 4}, {1, 2, 3}))
 
 
 if __name__ == '__main__':
