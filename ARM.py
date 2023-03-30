@@ -14,93 +14,104 @@ def load_file():
         i += 1
     return df
 
-# -----------------------------
+# -------------------------------------------------------------------------------
 
 def transform_df_arr_hash(df):
     arr_hash = df.to_dict('records')
     return arr_hash
 
-# -----------------------------
+# -------------------------------------------------------------------------------
 
 def transform_dict_to_set(dict_vals_0_1):
     return set(key for key, val in dict_vals_0_1.items() if val == '1')
 
-# -----------------------------
+# -------------------------------------------------------------------------------
 
 def transform_ah_to_arr_sets(arr_hash):
     return [transform_dict_to_set(dict_0_1) for dict_0_1 in arr_hash]
 
-# -----------------------------
+# -------------------------------------------------------------------------------
 
-def get_support(arr_sets, item):
+def get_support(arr_sets, length, item):
     count = 0
     for row in arr_sets:
-        if item.issubset(row):
+        # print(row)
+        if item<=row:
             count += 1
-    return count
+    return count/length
 
-# -----------------------------
+# -------------------------------------------------------------------------------
 
-def get_confidence(arr_sets, item_a, item_b):
-    count = 0
-    for row in arr_sets:
-        if item_a.issubset(row) and item_b.issubset(row):
-            count += 1
-    return count / get_support(arr_sets, item_a)
+# def get_confidence(arr_sets, item_a, item_b):
+#     count = 0
+#     return
 
-# -----------------------------
+# -------------------------------------------------------------------------------
 
-def get_lift(arr_sets, item_a, item_b):
-    return get_confidence(arr_sets, item_a, item_b) / get_support(arr_sets, item_b)
+# def get_lift(arr_sets, item_a, item_b):
+#     return get_confidence(arr_sets, item_a, item_b) / get_support(arr_sets, item_b)
 
-# -----------------------------
-
-def get_candidates(items, k):
-    candidates = set()
-    for item_a in items:
-        for item_b in items:
-            if len(item_a.union(item_b)) == k:
-                candidates.add(item_a.union(item_b))
-    return candidates
-
-# -----------------------------
-
-def apriori(arr_sets, min_support):
-    items = set()
-    for row in arr_sets:
-        for item in row:
-            items.add(frozenset([item]))
-    k = 2
-    while len(items) > 0:
-        items = get_candidates(items, k)
-        items = set([item for item in items if get_support(arr_sets, item) >= min_support])
-        k += 1
-    return items
-
-# -----------------------------
-
-def get_association_rules(arr_sets, min_confidence, min_lift, min_support):
-    items = apriori(arr_sets, min_support)
-    rules = []
-    for item in items:
-        for i in range(1, len(item)):
-            for subset in itertools.combinations(item, i):
-                subset = frozenset(subset)
-                if get_confidence(arr_sets, subset, item - subset) >= min_confidence and \
-                        get_lift(arr_sets, subset, item - subset) >= min_lift and \
-                        get_support(arr_sets, subset) >= min_support:
-                    rules.append((subset, item - subset))
-    return rules
-# -----------------------------
+# -------------------------------------------------------------------------------
 
 def main():
     df = load_file()
     arr_hash = transform_df_arr_hash(df)
     arr_sets = transform_ah_to_arr_sets(arr_hash)
-    rules = get_association_rules(arr_sets, 0.5, 1, 10)
-    print(rules)
+    arr_sets = sorted(arr_sets)
+    length = len(arr_sets)
+    min_support = 0.3
+    count = 0
+    frequent_items = []
+    for i in range(len(df.columns)):
+        support = get_support(arr_sets, length, {df.columns[i]})
+        if support >= min_support:
+            frequent_items.append(df.columns[i])
+            # print(str(df.columns[i]) + ": " + str(support))
+            count += 1
+            # print("\n")
+    print("Number of frequent itemsets: " + str(count))
+    print("\n\n")
+    count = 0
+    frequent_pairs = []
+    for i in range(len(frequent_items)):
+        for j in range(i+1, len(frequent_items)):
+            support = get_support(arr_sets, length, {frequent_items[i], frequent_items[j]})
+            if support >= min_support:
+                if {frequent_items[i], frequent_items[j]} not in frequent_pairs and \
+                        {frequent_items[j], frequent_items[i]} not in frequent_pairs:
+                    frequent_pairs.append({frequent_items[i], frequent_items[j]})
+                    # print(str(frequent_items[i]) + ", " + str(frequent_items[j]) + ": " + str(support))
+                    count+=1
+                    # print("\n")
+    print("Number of frequent itemsets: " + str(count))
+    print("\n\n")
+    count = 0
+    frequent_triples = []
+    index = 0
+    for i in range(len(frequent_pairs)):
+        for item in frequent_items:
+            if item not in frequent_pairs[i]:
+                support = get_support(arr_sets, length, frequent_pairs[i].union({item}))
+                if support >= min_support:
+                    if frequent_pairs[i].union({item}) not in frequent_triples:
+                        frequent_triples.append(frequent_pairs[i].union({item}))
+                        # print(str(frequent_triples[index]) + ": " + str(support))
+                        # print("Here")
+                        # print("\n")
+                        count+=1
+                        index+=1
+    # print(frequent_items)
+    # print("\n")
+    # print(frequent_pairs)
+    # print("\n")
+    # print(frequent_triples)
+    # print("\n")
+    print("Number of frequent itemsets: " + str(count))
+    print("\n\n")
 
-# -----------------------------
+
+
+# -------------------------------------------------------------------------------
 
 if __name__ == '__main__':
     main()
