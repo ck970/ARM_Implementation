@@ -99,7 +99,7 @@ def apriori_prune(arr_sets, length, k, min_support):
                 candidate_itemset = itemset1.union(itemset2)
                 if candidate_itemset not in candidate_itemsets:
                     candidate_itemsets.append(candidate_itemset)
-    return candidate_itemsets\
+    return candidate_itemsets
 
 # -------------------------------------------------------------------------------
 
@@ -124,6 +124,7 @@ def apriori(arr_sets, min_support):
 def main():
     df = load_file()
     arr_sets = process_transactions(df)
+    print(len(arr_sets))
     frequent_itemsets = apriori(arr_sets, 0.1)
     print(frequent_itemsets)
 
