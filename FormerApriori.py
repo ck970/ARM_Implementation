@@ -48,3 +48,19 @@ length = len(arr_sets)
     # print("\n")
     print("Number of frequent itemsets: " + str(count))
     print("\n\n")
+
+
+# -------------------------------------------------------------------------------
+
+def a_subset_b(set_a, set_b):
+    '''
+    :param set_a: the set that we want to see if it is a subset of set b
+    :param set_b: see above
+    :return: true if set_a is a subset of set_b, false otherwise
+    '''
+    # issubset can either be performed via explicit call or <= shorthand
+    temp_1 = set_a.issubset(set_b)
+    temp_2 = (set_a <= set_b)
+    return temp_1
+
+# -------------------------------------------------------------------------------

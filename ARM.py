@@ -6,6 +6,9 @@ import itertools
 import time
 
 def load_file():
+    '''
+    :return: df that is of the same form of past dfs after you use loadarff
+    '''
     data, meta = loadarff('basket.arff')
     df = pd.DataFrame(data)
     i = 0
@@ -17,18 +20,45 @@ def load_file():
 # -------------------------------------------------------------------------------
 
 def transform_df_arr_hash(df):
+    '''
+    :param df: your df
+    :return: the df expressed as an array of hash maps or technically in python
+    list of dicts
+    '''
     arr_hash = df.to_dict('records')
     return arr_hash
 
 # -------------------------------------------------------------------------------
 
 def transform_dict_to_set(dict_vals_0_1):
+    '''
+    :param dict_vals_0_1: dictionary where the values are 0 and 1 corresponding to
+    if key is present
+    :return: set of only those cols that are 'present'
+    '''
     return set(key for key, val in dict_vals_0_1.items() if val == '1')
 
 # -------------------------------------------------------------------------------
 
 def transform_ah_to_arr_sets(arr_hash):
+    '''
+    :param arr_hash: the list of dicts returned from transform_df_arr_hash
+    :return: a list of sets where each set only contains those columns present in
+    transaction row represents
+    '''
     return [transform_dict_to_set(dict_0_1) for dict_0_1 in arr_hash]
+
+# -------------------------------------------------------------------------------
+
+def process_transactions(df):
+    '''
+    :param df: your df
+    :return: a list of sets where each set only contains those columns present in
+    transaction row represents
+    '''
+    arr_hash = transform_df_arr_hash(df)
+    arr_sets = transform_ah_to_arr_sets(arr_hash)
+    return sorted(arr_sets)
 
 # -------------------------------------------------------------------------------
 
@@ -42,27 +72,16 @@ def get_support(arr_sets, length, item):
 
 # -------------------------------------------------------------------------------
 
-# def get_confidence(arr_sets, item_a, item_b):
-#     count = 0
-#     return
-
-# -------------------------------------------------------------------------------
-
-# def get_lift(arr_sets, item_a, item_b):
-#     return get_confidence(arr_sets, item_a, item_b) / get_support(arr_sets, item_b)
-
-# -------------------------------------------------------------------------------
-
-
-# -------------------------------------------------------------------------------
-
 def main():
-    df = load_file()
-    arr_hash = transform_df_arr_hash(df)
-    arr_sets = transform_ah_to_arr_sets(arr_hash)
-    arr_sets = sorted(arr_sets)
-    
 
+    start = time.time()
+
+    df = load_file()
+    arr_sets = process_transactions(df)
+    # print(arr_sets)
+
+    end = time.time()
+    print("Time: " + str(end-start) + " seconds")
 
 # -------------------------------------------------------------------------------
 
