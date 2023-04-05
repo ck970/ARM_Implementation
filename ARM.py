@@ -1,9 +1,8 @@
-from scipy.io import arff
 from scipy.io.arff import loadarff
 import pandas as pd
 import numpy as np
-import itertools
-import time
+import cProfile
+
 
 def load_file():
     '''
@@ -65,25 +64,71 @@ def process_transactions(df):
 def get_support(arr_sets, length, item):
     count = 0
     for row in arr_sets:
-        # print(row)
         if item<=row:
             count += 1
     return count/length
 
 # -------------------------------------------------------------------------------
 
+def apriori_join(arr_sets, length, k, min_support):
+    # Join frequent itemsets of size k-1 to create candidate itemsets of size k.
+    # Returns a list of candidate itemsets of size k.
+    for i in arr_sets:
+        if len(i) != k-1:
+            raise ValueError('Invalid itemset size.')
+    candidate_itemsets = []
+    for i in range(length):
+        for j in range(i+1, length):
+            itemset1 = arr_sets[i]
+            itemset2 = arr_sets[j]
+            if list(itemset1)[:k-2] == list(itemset2)[:k-2]:
+                candidate_itemset = itemset1.union(itemset2)
+                if candidate_itemset not in candidate_itemsets:
+                    candidate_itemsets.append(candidate_itemset)
+    return candidate_itemsets
+
+# -------------------------------------------------------------------------------
+def apriori_prune(arr_sets, length, k, min_support):
+    # Prunes candidate itemsets that contain subsets of size k-1 that are not frequent.
+    candidate_itemsets = []
+    for i in range(length):
+        for j in range(i+1, length):
+            itemset1 = arr_sets[i]
+            itemset2 = arr_sets[j]
+            if list(itemset1)[:k-2] == list(itemset2)[:k-2]:
+                candidate_itemset = itemset1.union(itemset2)
+                if candidate_itemset not in candidate_itemsets:
+                    candidate_itemsets.append(candidate_itemset)
+    return candidate_itemsets\
+
+# -------------------------------------------------------------------------------
+
+def apriori(arr_sets, min_support):
+    # Returns a list of all frequent itemsets.
+    frequent_itemsets = []
+    length = len(arr_sets)
+    k = 1
+    while True:
+        candidate_itemsets = apriori_join(arr_sets, length, k, min_support)
+        if not candidate_itemsets:
+            break
+        for candidate_itemset in candidate_itemsets:
+            support = get_support(arr_sets, length, candidate_itemset)
+            if support >= min_support:
+                frequent_itemsets.append(candidate_itemset)
+        k += 1
+    return frequent_itemsets
+
+# -------------------------------------------------------------------------------
+
 def main():
-
-    start = time.time()
-
     df = load_file()
     arr_sets = process_transactions(df)
-    # print(arr_sets)
-
-    end = time.time()
-    print("Time: " + str(end-start) + " seconds")
+    frequent_itemsets = apriori(arr_sets, 0.1)
+    print(frequent_itemsets)
 
 # -------------------------------------------------------------------------------
 
 if __name__ == '__main__':
+    # cProfile.run('main()', sort='calls')
     main()
