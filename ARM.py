@@ -3,6 +3,10 @@ import pandas as pd
 import numpy as np
 import cProfile
 
+min_support = 0.15
+min_confidence = 0.5
+length = 4000
+
 
 def load_file():
     '''
@@ -14,6 +18,7 @@ def load_file():
     for dtype in df.dtypes:
         df[df.columns[i]] = df[df.columns[i]].str.decode("utf-8")
         i += 1
+    # NEED TO SEE IF THERE IS A FASTER WAY TO EXECUTE LINES 14-16
     return df
 
 # -------------------------------------------------------------------------------
@@ -64,69 +69,43 @@ def process_transactions(df):
 def get_support(arr_sets, length, item):
     count = 0
     for row in arr_sets:
-        if item<=row:
+        if item in str(row):
             count += 1
     return count/length
+    # NEED TO SEE IF THERE'S A FASTER WAY TO EXECUTE THIS FUNCTION
 
 # -------------------------------------------------------------------------------
 
-def apriori_join(arr_sets, length, k, min_support):
-    # Join frequent itemsets of size k-1 to create candidate itemsets of size k.
-    # Returns a list of candidate itemsets of size k.
-    for i in arr_sets:
-        if len(i) != k-1:
-            raise ValueError('Invalid itemset size.')
-    candidate_itemsets = []
-    for i in range(length):
-        for j in range(i+1, length):
-            itemset1 = arr_sets[i]
-            itemset2 = arr_sets[j]
-            if list(itemset1)[:k-2] == list(itemset2)[:k-2]:
-                candidate_itemset = itemset1.union(itemset2)
-                if candidate_itemset not in candidate_itemsets:
-                    candidate_itemsets.append(candidate_itemset)
-    return candidate_itemsets
-
-# -------------------------------------------------------------------------------
-def apriori_prune(arr_sets, length, k, min_support):
-    # Prunes candidate itemsets that contain subsets of size k-1 that are not frequent.
-    candidate_itemsets = []
-    for i in range(length):
-        for j in range(i+1, length):
-            itemset1 = arr_sets[i]
-            itemset2 = arr_sets[j]
-            if list(itemset1)[:k-2] == list(itemset2)[:k-2]:
-                candidate_itemset = itemset1.union(itemset2)
-                if candidate_itemset not in candidate_itemsets:
-                    candidate_itemsets.append(candidate_itemset)
-    return candidate_itemsets
+def generate_frequent_itemsets_size_one(columns, arr_sets, min_support):
+    frequent_sets_size_one = np.array([])
+    # length = len(arr_sets)
+    for item in columns:
+        item_support = get_support(arr_sets, length, item)
+        # print(str(item) + "'s Support: " + str(item_support))
+        if item_support >= min_support:
+            frequent_sets_size_one = np.append(frequent_sets_size_one, item)
+    return frequent_sets_size_one
 
 # -------------------------------------------------------------------------------
 
-def apriori(arr_sets, min_support):
-    # Returns a list of all frequent itemsets.
-    frequent_itemsets = []
-    length = len(arr_sets)
-    k = 1
-    while True:
-        candidate_itemsets = apriori_join(arr_sets, length, k, min_support)
-        if not candidate_itemsets:
-            break
-        for candidate_itemset in candidate_itemsets:
-            support = get_support(arr_sets, length, candidate_itemset)
-            if support >= min_support:
-                frequent_itemsets.append(candidate_itemset)
-        k += 1
-    return frequent_itemsets
+def generate_frequent_itemsets_size_two_join(columns, arr_sets, min_support):
+    frequent_sets_size_two = np.array([])
+    item_set = np.array([])
+    num_remaining_frequent_items = len(columns)
+    current_index = 0
+    for item in columns:
+        for i in range(num_remaining_frequent_items - current_index):
+            item_set = item.union(columns[current_index+i])
+    
 
 # -------------------------------------------------------------------------------
 
 def main():
     df = load_file()
+    columns = list(df.columns)
     arr_sets = process_transactions(df)
-    print(len(arr_sets))
-    frequent_itemsets = apriori(arr_sets, 0.1)
-    print(frequent_itemsets)
+    item_sets = generate_frequent_itemsets_size_one(columns, arr_sets, min_support)
+    print(item_sets)
 
 # -------------------------------------------------------------------------------
 
