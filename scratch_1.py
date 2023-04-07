@@ -15,20 +15,15 @@ item_list = list(df.columns)
 item_dict = dict()
 for i, item in enumerate(item_list):
     item_dict[item] = i + 1
-# print(item_dict)
 
 transactions = list()
 
 for i, row in df.iterrows():
     transaction = set()
-
     for item in item_dict:
         if row[item] == '1':
             transaction.add(item_dict[item])
     transactions.append(transaction)
-
-# print(transactions)
-
 
 def get_support(transactions, item_set):
     match_count = 0
@@ -98,6 +93,7 @@ def apriori(min_support):
     print("level : 1", end=" ")
 
     for item in range(1, len(item_list) + 1):
+        print(type({item}))
         support = get_support(transactions, {item})
         if support >= min_support:
             frequent_item_sets_per_level[1].append(({item}, support))

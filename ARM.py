@@ -69,7 +69,7 @@ def process_transactions(df):
 def get_support(arr_sets, length, item):
     count = 0
     for row in arr_sets:
-        if item in str(row):
+        if {item} <= row:
             count += 1
     return float(count/length)
 
@@ -87,20 +87,25 @@ def get_support(arr_sets, length, item):
 
 # -------------------------------------------------------------------------------
 
-def generate_frequent_itemsets_size_two_join(products, arr_sets, min_support):
-    frequent_sets_size_two = set()
-    item_set = set()
-    num_remaining_frequent_items = len(products)
-    current_index = 0
-    for item in products:
-        for i in range(num_remaining_frequent_items - current_index):
-            item_set = arr_sets[current_index].union(products[current_index+i])
-            item_set_support = get_support(arr_sets, length, item_set)
-            if item_set_support >= min_support:
-                frequent_sets_size_two.add(item_set)
-        current_index += 1
-        num_remaining_frequent_items -= 1
-    return frequent_sets_size_two
+def join_step(num_remaining_frequent_sets, arr_sets):
+    k_frequent_sets = set()
+    k_minus_one_frequent_items = num_remaining_frequent_sets[k - 1]
+    for i in range(len(k_minus_one_frequent_items)):
+        for j in range(i + 1, len(k_minus_one_frequent_items)):
+            if (k_minus_one_frequent_items[i] & k_minus_one_frequent_items[j] not in k_frequent_sets and
+                    (k_minus_one_frequent_items[i] & k_minus_one_frequent_items[j]) == k - 2):
+                k_frequent_sets.add(k_minus_one_frequent_items[i] & k_minus_one_frequent_items[j])
+    return k_frequent_sets
+
+# -------------------------------------------------------------------------------
+
+# def prune_step(k_frequent_sets, arr_sets, min_support):
+#     k_frequent_sets_pruned = set()
+#     for item in k_frequent_sets:
+#         item_support = get_support(arr_sets, length, item)
+#         if item_support >= min_support:
+#             k_frequent_sets_pruned.add(item)
+#     return k_frequent_sets_pruned
 
 # -------------------------------------------------------------------------------
 
@@ -108,8 +113,7 @@ def main():
     df = load_file()
     columns = list(df.columns)
     arr_sets = process_transactions(df)
-    item_sets = generate_frequent_itemsets_size_one(columns, arr_sets, min_support)
-    item_sets = generate_frequent_itemsets_size_two_join(item_sets, arr_sets, min_support)
+    item_sets = join_step(arr_sets)
     print(item_sets)
 
 # -------------------------------------------------------------------------------
