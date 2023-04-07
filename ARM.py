@@ -71,32 +71,36 @@ def get_support(arr_sets, length, item):
     for row in arr_sets:
         if item in str(row):
             count += 1
-    return count/length
-    # NEED TO SEE IF THERE'S A FASTER WAY TO EXECUTE THIS FUNCTION
+    return float(count/length)
 
 # -------------------------------------------------------------------------------
 
-def generate_frequent_itemsets_size_one(columns, arr_sets, min_support):
-    frequent_sets_size_one = np.array([])
-    # length = len(arr_sets)
-    for item in columns:
-        item_support = get_support(arr_sets, length, item)
-        # print(str(item) + "'s Support: " + str(item_support))
-        if item_support >= min_support:
-            frequent_sets_size_one = np.append(frequent_sets_size_one, item)
-    return frequent_sets_size_one
+# def generate_frequent_itemsets_size_one(columns, arr_sets, min_support):
+#     frequent_sets_size_one = set()
+#     # length = len(arr_sets)
+#     for item in columns:
+#         item_support = get_support(arr_sets, length, item)
+#         # print(str(item) + "'s Support: " + str(item_support))
+#         if item_support >= min_support:
+#             frequent_sets_size_one.add(item)
+#     return frequent_sets_size_one
 
 # -------------------------------------------------------------------------------
 
-def generate_frequent_itemsets_size_two_join(columns, arr_sets, min_support):
-    frequent_sets_size_two = np.array([])
-    item_set = np.array([])
-    num_remaining_frequent_items = len(columns)
+def generate_frequent_itemsets_size_two_join(products, arr_sets, min_support):
+    frequent_sets_size_two = set()
+    item_set = set()
+    num_remaining_frequent_items = len(products)
     current_index = 0
-    for item in columns:
+    for item in products:
         for i in range(num_remaining_frequent_items - current_index):
-            item_set = item.union(columns[current_index+i])
-    
+            item_set = arr_sets[current_index].union(products[current_index+i])
+            item_set_support = get_support(arr_sets, length, item_set)
+            if item_set_support >= min_support:
+                frequent_sets_size_two.add(item_set)
+        current_index += 1
+        num_remaining_frequent_items -= 1
+    return frequent_sets_size_two
 
 # -------------------------------------------------------------------------------
 
@@ -105,6 +109,7 @@ def main():
     columns = list(df.columns)
     arr_sets = process_transactions(df)
     item_sets = generate_frequent_itemsets_size_one(columns, arr_sets, min_support)
+    item_sets = generate_frequent_itemsets_size_two_join(item_sets, arr_sets, min_support)
     print(item_sets)
 
 # -------------------------------------------------------------------------------
