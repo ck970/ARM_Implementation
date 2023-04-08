@@ -2,10 +2,7 @@ from scipy.io.arff import loadarff
 import pandas as pd
 import numpy as np
 import cProfile
-
-min_support = 0.15
-min_confidence = 0.5
-length = 4000
+from collections import defaultdict
 
 
 def load_file():
@@ -18,7 +15,6 @@ def load_file():
     for dtype in df.dtypes:
         df[df.columns[i]] = df[df.columns[i]].str.decode("utf-8")
         i += 1
-    # NEED TO SEE IF THERE IS A FASTER WAY TO EXECUTE LINES 14-16
     return df
 
 # -------------------------------------------------------------------------------
@@ -75,19 +71,7 @@ def get_support(arr_sets, length, item):
 
 # -------------------------------------------------------------------------------
 
-# def generate_frequent_itemsets_size_one(columns, arr_sets, min_support):
-#     frequent_sets_size_one = set()
-#     # length = len(arr_sets)
-#     for item in columns:
-#         item_support = get_support(arr_sets, length, item)
-#         # print(str(item) + "'s Support: " + str(item_support))
-#         if item_support >= min_support:
-#             frequent_sets_size_one.add(item)
-#     return frequent_sets_size_one
-
-# -------------------------------------------------------------------------------
-
-def join_step(num_remaining_frequent_sets, arr_sets):
+def join_step(num_remaining_frequent_sets, k):
     k_frequent_sets = set()
     k_minus_one_frequent_items = num_remaining_frequent_sets[k - 1]
     for i in range(len(k_minus_one_frequent_items)):
@@ -95,26 +79,64 @@ def join_step(num_remaining_frequent_sets, arr_sets):
             if (k_minus_one_frequent_items[i] & k_minus_one_frequent_items[j] not in k_frequent_sets and
                     (k_minus_one_frequent_items[i] & k_minus_one_frequent_items[j]) == k - 2):
                 k_frequent_sets.add(k_minus_one_frequent_items[i] & k_minus_one_frequent_items[j])
+
     return k_frequent_sets
 
 # -------------------------------------------------------------------------------
 
-# def prune_step(k_frequent_sets, arr_sets, min_support):
-#     k_frequent_sets_pruned = set()
-#     for item in k_frequent_sets:
-#         item_support = get_support(arr_sets, length, item)
-#         if item_support >= min_support:
-#             k_frequent_sets_pruned.add(item)
-#     return k_frequent_sets_pruned
+def prune_step(num_remaining_frequent_sets, k_frequent_sets, k):
+    k_frequent_sets_pruned = list()
+    if len(k_frequent_sets) == 0:
+        return k_frequent_sets_pruned
+    k_minus_one_frequent_sets = set()
+    for sets in num_remaining_frequent_sets[k - 1]:
+        k_minus_one_frequent_sets.add(sets)
+    for set in k_frequent_sets:
+        for item in set:
+            set_minus_item = set - {item}
+            if set_minus_item not in k_minus_one_frequent_sets:
+                break
+        else:
+            k_frequent_sets_pruned.add(set)
+    return k_frequent_sets_pruned
+
+# -------------------------------------------------------------------------------
+
+def apriori(min_support):
+    df = load_file()
+    columns = list(df.columns)
+    arr_sets = process_transactions(df)
+    length = len(arr_sets)
+    num_remaining_frequent_sets = defaultdict(list)
+    print("K = 1\n")
+    for product in range(1, len(columns) + 1):
+        support = get_support(arr_sets, length, product)
+        if support >= min_support:
+            num_remaining_frequent_sets[1].append({product})
+    for k in range(2, len(columns) + 1):
+        print("K = " + str(k) + "\n")
+        k_frequent_sets = join_step(num_remaining_frequent_sets, k)
+        k_frequent_sets_pruned = prune_step(num_remaining_frequent_sets, k_frequent_sets, k)
+        if len(k_frequent_sets_pruned) == 0:
+            break
+        for set in k_frequent_sets_pruned:
+            support = get_support(arr_sets, length, set)
+            if support >= min_support:
+                num_remaining_frequent_sets[k].append({set})
+    return num_remaining_frequent_sets
 
 # -------------------------------------------------------------------------------
 
 def main():
-    df = load_file()
-    columns = list(df.columns)
-    arr_sets = process_transactions(df)
-    item_sets = join_step(arr_sets)
-    print(item_sets)
+    min_support = 0.15
+    num_remaining_frequent_sets = apriori(min_support)
+    for k in num_remaining_frequent_sets:
+        print(len(num_remaining_frequent_sets[k]))
+    # df = load_file()
+    # columns = list(df.columns)
+    # arr_sets = process_transactions(df)
+    # item_sets = join_step(arr_sets)
+    # print(item_sets)
 
 # -------------------------------------------------------------------------------
 

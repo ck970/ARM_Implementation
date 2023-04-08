@@ -37,6 +37,7 @@ def get_support(transactions, item_set):
 def self_join(frequent_item_sets_per_level, level):
     current_level_candidates = list()
     last_level_items = frequent_item_sets_per_level[level - 1]
+    # print(type(last_level_items))
 
     if len(last_level_items) == 0:
         return current_level_candidates
@@ -90,10 +91,11 @@ def pruning(frequent_item_sets_per_level, level, candidate_set):
 
 def apriori(min_support):
     frequent_item_sets_per_level = defaultdict(list)
+    # print(type(frequent_item_sets_per_level))
     print("level : 1", end=" ")
 
     for item in range(1, len(item_list) + 1):
-        print(type({item}))
+        # print(type({item}))
         support = get_support(transactions, {item})
         if support >= min_support:
             frequent_item_sets_per_level[1].append(({item}, support))
@@ -116,62 +118,63 @@ def apriori(min_support):
 
 min_support = 0.15
 frequent_item_sets_per_level = apriori(min_support)
+print("\n")
 for level in frequent_item_sets_per_level:
     print(len(frequent_item_sets_per_level[level]))
     # print(frequent_item_sets_per_level[level])
 print("\n\n")
 
-item_support_dict = dict()
-item_list = list()
-
-key_list = list(item_dict.keys())
-val_list = list(item_dict.values())
-
-for level in frequent_item_sets_per_level:
-    for set_support_pair in frequent_item_sets_per_level[level]:
-        for i in set_support_pair[0]:
-            item_list.append(key_list[val_list.index(i)])
-        item_support_dict[frozenset(item_list)] = set_support_pair[1]
-        item_list = list()
-
-def find_subset(item, item_length):
-    combs = []
-    for i in range(1, item_length + 1):
-        combs.append(list(combinations(item, i)))
-
-    subsets = []
-    for comb in combs:
-        for elt in comb:
-            subsets.append(elt)
-
-    return subsets
-
-
-def association_rules(min_confidence, support_dict):
-    rules = list()
-    for item, support in support_dict.items():
-        item_length = len(item)
-
-        if item_length > 1:
-            subsets = find_subset(item, item_length)
-
-            for A in subsets:
-                B = item.difference(A)
-
-                if B:
-                    A = frozenset(A)
-
-                    AB = A | B
-
-                    confidence = support_dict[AB] / support_dict[A]
-                    if confidence >= min_confidence:
-                        rules.append((A, B, confidence))
-
-    return rules
-
-association_rules = association_rules(min_confidence = 0.5, support_dict = item_support_dict)
-
-print("Number of rules: ", len(association_rules), "\n")
-
-for rule in association_rules:
-    print('{0} -> {1} <confidence: {2}>'.format(set(rule[0]), set(rule[1]), rule[2]))
+# item_support_dict = dict()
+# item_list = list()
+#
+# key_list = list(item_dict.keys())
+# val_list = list(item_dict.values())
+#
+# for level in frequent_item_sets_per_level:
+#     for set_support_pair in frequent_item_sets_per_level[level]:
+#         for i in set_support_pair[0]:
+#             item_list.append(key_list[val_list.index(i)])
+#         item_support_dict[frozenset(item_list)] = set_support_pair[1]
+#         item_list = list()
+#
+# def find_subset(item, item_length):
+#     combs = []
+#     for i in range(1, item_length + 1):
+#         combs.append(list(combinations(item, i)))
+#
+#     subsets = []
+#     for comb in combs:
+#         for elt in comb:
+#             subsets.append(elt)
+#
+#     return subsets
+#
+#
+# def association_rules(min_confidence, support_dict):
+#     rules = list()
+#     for item, support in support_dict.items():
+#         item_length = len(item)
+#
+#         if item_length > 1:
+#             subsets = find_subset(item, item_length)
+#
+#             for A in subsets:
+#                 B = item.difference(A)
+#
+#                 if B:
+#                     A = frozenset(A)
+#
+#                     AB = A | B
+#
+#                     confidence = support_dict[AB] / support_dict[A]
+#                     if confidence >= min_confidence:
+#                         rules.append((A, B, confidence))
+#
+#     return rules
+#
+# association_rules = association_rules(min_confidence = 0.5, support_dict = item_support_dict)
+#
+# print("Number of rules: ", len(association_rules), "\n")
+#
+# for rule in association_rules:
+#     print('{0} -> {1} <confidence: {2}>'.format(set(rule[0]), set(rule[1]), rule[2]))
