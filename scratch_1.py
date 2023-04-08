@@ -3,6 +3,7 @@ import numpy as np
 from itertools import combinations
 from scipy.io.arff import loadarff
 from collections import defaultdict
+import cProfile
 
 data, meta = loadarff('basket.arff')
 df = pd.DataFrame(data)
@@ -27,7 +28,9 @@ for i, row in df.iterrows():
 
 def get_support(transactions, item_set):
     match_count = 0
+    # print(item_set)
     for transaction in transactions:
+        # print(transaction)
         if item_set.issubset(transaction):
             match_count += 1
 
@@ -99,6 +102,7 @@ def apriori(min_support):
         support = get_support(transactions, {item})
         if support >= min_support:
             frequent_item_sets_per_level[1].append(({item}, support))
+    # print(frequent_item_sets_per_level)
 
     for level in range(2, len(item_list) + 1):
         print(level, end=" ")
@@ -116,13 +120,18 @@ def apriori(min_support):
 
     return frequent_item_sets_per_level
 
-min_support = 0.15
-frequent_item_sets_per_level = apriori(min_support)
-print("\n")
-for level in frequent_item_sets_per_level:
-    print(len(frequent_item_sets_per_level[level]))
-    # print(frequent_item_sets_per_level[level])
-print("\n\n")
+def main():
+
+    min_support = 0.15
+    frequent_item_sets_per_level = apriori(min_support)
+    print("\n")
+    for level in frequent_item_sets_per_level:
+        print(len(frequent_item_sets_per_level[level]))
+        # print(frequent_item_sets_per_level[level])
+    print("\n\n")
+
+if __name__ == '__main__':
+    cProfile.run('main()', sort='time')
 
 # item_support_dict = dict()
 # item_list = list()

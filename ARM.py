@@ -65,21 +65,24 @@ def process_transactions(df):
 def get_support(arr_sets, length, item):
     count = 0
     for row in arr_sets:
-        if {item} <= row:
+        if item <= row:
             count += 1
     return float(count/length)
 
 # -------------------------------------------------------------------------------
 
 def join_step(num_remaining_frequent_sets, k):
-    k_frequent_sets = set()
+    k_frequent_sets = list()
     k_minus_one_frequent_items = num_remaining_frequent_sets[k - 1]
+    if len(k_minus_one_frequent_items) == 0:
+        return k_frequent_sets
     for i in range(len(k_minus_one_frequent_items)):
         for j in range(i + 1, len(k_minus_one_frequent_items)):
-            if (k_minus_one_frequent_items[i] & k_minus_one_frequent_items[j] not in k_frequent_sets and
-                    (k_minus_one_frequent_items[i] & k_minus_one_frequent_items[j]) == k - 2):
-                k_frequent_sets.add(k_minus_one_frequent_items[i] & k_minus_one_frequent_items[j])
-
+            union_i_j = k_minus_one_frequent_items[i][0].union(k_minus_one_frequent_items[j][0])
+            # print(union_i_j)
+            if (union_i_j not in k_frequent_sets and
+                    (len(union_i_j) == k)):
+                k_frequent_sets.append(union_i_j)
     return k_frequent_sets
 
 # -------------------------------------------------------------------------------
@@ -88,16 +91,14 @@ def prune_step(num_remaining_frequent_sets, k_frequent_sets, k):
     k_frequent_sets_pruned = list()
     if len(k_frequent_sets) == 0:
         return k_frequent_sets_pruned
-    k_minus_one_frequent_sets = set()
-    for sets in num_remaining_frequent_sets[k - 1]:
-        k_minus_one_frequent_sets.add(sets)
+    k_minus_one_frequent_sets = list()
+    for sets, na in num_remaining_frequent_sets[k - 1]:
+        k_minus_one_frequent_sets.append(sets)
     for set in k_frequent_sets:
         for item in set:
             set_minus_item = set - {item}
-            if set_minus_item not in k_minus_one_frequent_sets:
-                break
-        else:
-            k_frequent_sets_pruned.add(set)
+            if set_minus_item in k_minus_one_frequent_sets:
+                k_frequent_sets_pruned.append(set)
     return k_frequent_sets_pruned
 
 # -------------------------------------------------------------------------------
@@ -108,13 +109,13 @@ def apriori(min_support):
     arr_sets = process_transactions(df)
     length = len(arr_sets)
     num_remaining_frequent_sets = defaultdict(list)
-    print("K = 1\n")
-    for product in range(1, len(columns) + 1):
-        support = get_support(arr_sets, length, product)
+
+    for product in columns:
+        support = get_support(arr_sets, length, {product})
         if support >= min_support:
-            num_remaining_frequent_sets[1].append({product})
+            num_remaining_frequent_sets[1].append(({product}, support))
+
     for k in range(2, len(columns) + 1):
-        print("K = " + str(k) + "\n")
         k_frequent_sets = join_step(num_remaining_frequent_sets, k)
         k_frequent_sets_pruned = prune_step(num_remaining_frequent_sets, k_frequent_sets, k)
         if len(k_frequent_sets_pruned) == 0:
@@ -122,7 +123,7 @@ def apriori(min_support):
         for set in k_frequent_sets_pruned:
             support = get_support(arr_sets, length, set)
             if support >= min_support:
-                num_remaining_frequent_sets[k].append({set})
+                num_remaining_frequent_sets[k].append((set, support))
     return num_remaining_frequent_sets
 
 # -------------------------------------------------------------------------------
@@ -132,14 +133,9 @@ def main():
     num_remaining_frequent_sets = apriori(min_support)
     for k in num_remaining_frequent_sets:
         print(len(num_remaining_frequent_sets[k]))
-    # df = load_file()
-    # columns = list(df.columns)
-    # arr_sets = process_transactions(df)
-    # item_sets = join_step(arr_sets)
-    # print(item_sets)
 
 # -------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    # cProfile.run('main()', sort='calls')
+    # cProfile.run('main()', sort='time')
     main()
