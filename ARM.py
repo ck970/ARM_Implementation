@@ -79,7 +79,6 @@ def join_step(num_remaining_frequent_sets, k):
     for i in range(len(k_minus_one_frequent_items)):
         for j in range(i + 1, len(k_minus_one_frequent_items)):
             union_i_j = k_minus_one_frequent_items[i][0].union(k_minus_one_frequent_items[j][0])
-            # print(union_i_j)
             if (union_i_j not in k_frequent_sets and
                     (len(union_i_j) == k)):
                 k_frequent_sets.append(union_i_j)
@@ -87,7 +86,18 @@ def join_step(num_remaining_frequent_sets, k):
 
 # -------------------------------------------------------------------------------
 
+def prune_check(set, k_minus_one_frequent_sets):
+    valid_candidate = True
+    for item in set:
+        set_minus_item = set - {item}
+        if set_minus_item not in k_minus_one_frequent_sets:
+            valid_candidate = False
+    return valid_candidate
+
+# -------------------------------------------------------------------------------
+
 def prune_step(num_remaining_frequent_sets, k_frequent_sets, k):
+    counter = 0
     k_frequent_sets_pruned = list()
     if len(k_frequent_sets) == 0:
         return k_frequent_sets_pruned
@@ -95,10 +105,8 @@ def prune_step(num_remaining_frequent_sets, k_frequent_sets, k):
     for sets, na in num_remaining_frequent_sets[k - 1]:
         k_minus_one_frequent_sets.append(sets)
     for set in k_frequent_sets:
-        for item in set:
-            set_minus_item = set - {item}
-            if set_minus_item in k_minus_one_frequent_sets:
-                k_frequent_sets_pruned.append(set)
+        if prune_check(set, k_minus_one_frequent_sets):
+            k_frequent_sets_pruned.append(set)
     return k_frequent_sets_pruned
 
 # -------------------------------------------------------------------------------
@@ -109,6 +117,7 @@ def apriori(min_support):
     arr_sets = process_transactions(df)
     length = len(arr_sets)
     num_remaining_frequent_sets = defaultdict(list)
+    print("K = 1\n")
 
     for product in columns:
         support = get_support(arr_sets, length, {product})
@@ -116,6 +125,7 @@ def apriori(min_support):
             num_remaining_frequent_sets[1].append(({product}, support))
 
     for k in range(2, len(columns) + 1):
+        print("K = " + str(k) + "\n")
         k_frequent_sets = join_step(num_remaining_frequent_sets, k)
         k_frequent_sets_pruned = prune_step(num_remaining_frequent_sets, k_frequent_sets, k)
         if len(k_frequent_sets_pruned) == 0:
