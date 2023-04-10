@@ -64,6 +64,13 @@ def process_transactions(df):
 # -------------------------------------------------------------------------------
 
 def get_support(arr_sets, length, item):
+    """
+    :param arr_sets: list of sets where each set only contains those columns present in
+    transaction row represents
+    :param length: length of arr_sets
+    :param item: individual product (MaxwellHouseRegularGroundCoffee, BrewRiteConeStyleCoffeeFilters, etc.)
+    :return: support of that product
+    """
     count = 0
     for row in arr_sets:
         if item <= row:
@@ -73,6 +80,11 @@ def get_support(arr_sets, length, item):
 # -------------------------------------------------------------------------------
 
 def join_step(remaining_frequent_sets, k):
+    """
+    :param remaining_frequent_sets: list of all frequent itemsets of length k
+    :param k: iterable, starts at 1, counts length of itemsets in a given iteration
+    :return: new frequent itemsets of length k
+    """
     k_frequent_sets = list()
     k_minus_one_frequent_items = remaining_frequent_sets[k - 1]
     if len(k_minus_one_frequent_items) == 0:
@@ -88,6 +100,11 @@ def join_step(remaining_frequent_sets, k):
 # -------------------------------------------------------------------------------
 
 def prune_check(set, k_minus_one_frequent_sets):
+    """
+    :param set: given frequent itemset of length k from k_frequent_sets
+    :param k_minus_one_frequent_sets: list of all frequent itemsets of length k-1
+    :return: boolean which is 'True' if the itemset does not need to be pruned, and 'False' otherwise
+    """
     valid_candidate = True
     for item in set:
         set_minus_item = set - {item}
@@ -98,6 +115,12 @@ def prune_check(set, k_minus_one_frequent_sets):
 # -------------------------------------------------------------------------------
 
 def prune_step(remaining_frequent_sets, k_frequent_sets, k):
+    """
+    :param remaining_frequent_sets:
+    :param k_frequent_sets:
+    :param k:
+    :return:
+    """
     counter = 0
     k_frequent_sets_pruned = list()
     if len(k_frequent_sets) == 0:
@@ -113,6 +136,10 @@ def prune_step(remaining_frequent_sets, k_frequent_sets, k):
 # -------------------------------------------------------------------------------
 
 def apriori(min_support):
+    """
+    :param min_support:
+    :return:
+    """
     df = load_file()
     columns = list(df.columns)
     arr_sets = process_transactions(df)
@@ -141,6 +168,10 @@ def apriori(min_support):
 # -------------------------------------------------------------------------------
 
 def generate_all_subsets(set):
+    """
+    :param set:
+    :return:
+    """
     subsets = []
     possible_combinations = []
     if len(set) > 1:
@@ -156,6 +187,12 @@ def generate_all_subsets(set):
 # -------------------------------------------------------------------------------
 
 def generate_association_rules(remaining_frequent_sets, arr_sets_dict, min_confidence):
+    """
+    :param remaining_frequent_sets:
+    :param arr_sets_dict:
+    :param min_confidence:
+    :return:
+    """
     temp_list = []
     association_rules = []
     rfs_dict = dict()
@@ -188,6 +225,12 @@ def generate_association_rules(remaining_frequent_sets, arr_sets_dict, min_confi
 # -------------------------------------------------------------------------------
 
 def print_rules(association_rules, largest_k, num_best_rules):
+    """
+    :param association_rules:
+    :param largest_k:
+    :param num_best_rules:
+    :return:
+    """
     num_largest_k_rules = 0
     best_rules = []
     temp_best_rules = []
@@ -217,6 +260,9 @@ def print_rules(association_rules, largest_k, num_best_rules):
 # -------------------------------------------------------------------------------
 
 def main():
+    """
+    :return:
+    """
     min_support = 0.15
     print("Minimum support: " + str(min_support))
     min_confidence = 0.6
