@@ -187,21 +187,19 @@ def generate_association_rules(remaining_frequent_sets, arr_sets_dict, min_confi
 
 # -------------------------------------------------------------------------------
 
-def print_rules(association_rules, largest_k):
-    num_best_rules = 2
+def print_rules(association_rules, largest_k, num_best_rules):
     num_largest_k_rules = 0
     best_rules = []
     temp_best_rules = []
-
     print("------------------------------------\n")
-    print("ASSOCIATION RULES FOUND: \n")
+    # print("ALL VALID ASSOCIATION RULES FOUND: \n")
     for rule in association_rules:
         if rule[3] == largest_k:
             num_largest_k_rules += 1
-        print("Rule: " + str(list(rule[0])) + " -> " + str(list(rule[1])))
-        print("Confidence: " + str(rule[2]))
-        print("Lift: " + str(rule[4]) + "\n")
-        temp_best_rules.append((rule[2] + rule[4]))
+        # print("Rule: " + str(list(rule[0])) + " -> " + str(list(rule[1])))
+        # print("Confidence: " + str(rule[2]))
+        # print("Lift: " + str(rule[4]) + "\n")
+        temp_best_rules.append((rule[2]))
     for i in range(num_best_rules):
         max_temp = temp_best_rules.index(max(temp_best_rules))
         best_rules.append(max_temp)
@@ -209,7 +207,7 @@ def print_rules(association_rules, largest_k):
     print("Number of association rules for largest K-frequent itemsets: " + str(num_largest_k_rules))
     print("\n")
     print("------------------------------------\n")
-    print("BEST RULES FOUND: \n")
+    print("Best rules found: \n")
     for i in best_rules:
         print("Rule: " + str(list(association_rules[i][0])) + " -> " + str(list(association_rules[i][1])))
         print("Confidence: " + str(association_rules[i][2]))
@@ -220,8 +218,12 @@ def print_rules(association_rules, largest_k):
 
 def main():
     min_support = 0.15
+    print("Minimum support: " + str(min_support))
     min_confidence = 0.6
-    num_best_rules = 2
+    print("Minimum confidence: " + str(min_confidence))
+    num_best_rules = 15
+    print("Number of best rules to print: " + str(num_best_rules) + "\n")
+
     remaining_frequent_sets, rfs_dict = apriori(min_support)
     largest_k = max(remaining_frequent_sets.keys())
     for k in remaining_frequent_sets:
@@ -229,7 +231,7 @@ def main():
         print("Number of frequent itemsets: " + str(len(remaining_frequent_sets[k])))
         print("\n")
     association_rules = generate_association_rules(remaining_frequent_sets, rfs_dict, min_confidence)
-    print_rules(association_rules, largest_k)
+    print_rules(association_rules, largest_k, num_best_rules)
 
 # -------------------------------------------------------------------------------
 
