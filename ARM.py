@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import cProfile
 from collections import defaultdict
+from itertools import combinations
 
 
 def load_file():
@@ -71,9 +72,9 @@ def get_support(arr_sets, length, item):
 
 # -------------------------------------------------------------------------------
 
-def join_step(num_remaining_frequent_sets, k):
+def join_step(remaining_frequent_sets, k):
     k_frequent_sets = list()
-    k_minus_one_frequent_items = num_remaining_frequent_sets[k - 1]
+    k_minus_one_frequent_items = remaining_frequent_sets[k - 1]
     if len(k_minus_one_frequent_items) == 0:
         return k_frequent_sets
     for i in range(len(k_minus_one_frequent_items)):
@@ -96,13 +97,13 @@ def prune_check(set, k_minus_one_frequent_sets):
 
 # -------------------------------------------------------------------------------
 
-def prune_step(num_remaining_frequent_sets, k_frequent_sets, k):
+def prune_step(remaining_frequent_sets, k_frequent_sets, k):
     counter = 0
     k_frequent_sets_pruned = list()
     if len(k_frequent_sets) == 0:
         return k_frequent_sets_pruned
     k_minus_one_frequent_sets = list()
-    for sets, na in num_remaining_frequent_sets[k - 1]:
+    for sets, na in remaining_frequent_sets[k - 1]:
         k_minus_one_frequent_sets.append(sets)
     for set in k_frequent_sets:
         if prune_check(set, k_minus_one_frequent_sets):
@@ -115,9 +116,11 @@ def apriori(min_support):
     df = load_file()
     columns = list(df.columns)
     arr_sets = process_transactions(df)
+    arr_sets_dict = dict()
+    for index, item in enumerate(columns):
+        arr_sets_dict[item] = index + 1
     length = len(arr_sets)
     num_remaining_frequent_sets = defaultdict(list)
-    print("K = 1\n")
 
     for product in columns:
         support = get_support(arr_sets, length, {product})
@@ -125,7 +128,6 @@ def apriori(min_support):
             num_remaining_frequent_sets[1].append(({product}, support))
 
     for k in range(2, len(columns) + 1):
-        print("K = " + str(k) + "\n")
         k_frequent_sets = join_step(num_remaining_frequent_sets, k)
         k_frequent_sets_pruned = prune_step(num_remaining_frequent_sets, k_frequent_sets, k)
         if len(k_frequent_sets_pruned) == 0:
@@ -134,15 +136,100 @@ def apriori(min_support):
             support = get_support(arr_sets, length, set)
             if support >= min_support:
                 num_remaining_frequent_sets[k].append((set, support))
-    return num_remaining_frequent_sets
+    return num_remaining_frequent_sets, arr_sets_dict
+
+# -------------------------------------------------------------------------------
+
+def generate_all_subsets(set):
+    subsets = []
+    possible_combinations = []
+    if len(set) > 1:
+        for i in range(1, len(set) + 1):
+            possible_combinations.append(list(combinations(set, i)))
+        for combination in possible_combinations:
+            for item in combination:
+                subsets.append(item)
+    else:
+        subsets.append(set)
+    return subsets
+
+# -------------------------------------------------------------------------------
+
+def generate_association_rules(remaining_frequent_sets, arr_sets_dict, min_confidence):
+    temp_list = []
+    association_rules = []
+    rfs_dict = dict()
+    item_list = list(arr_sets_dict.keys())
+    index_list = list(arr_sets_dict.values())
+
+    for k in remaining_frequent_sets:
+        for itemset in remaining_frequent_sets[k]:
+            for item in itemset[0]:
+                temp_list.append(item)
+            rfs_dict[frozenset(temp_list)] = itemset[1]
+            temp_list = []
+    for item, support in rfs_dict.items():
+        length = len(item)
+        if length > 1:
+                subsets = generate_all_subsets(item)
+                for A in subsets:
+                    B = item.difference(A)
+                    B = frozenset(B)
+                    if B:
+                        A = frozenset(A)
+                        AB = A.union(B)
+                        length_rule = len(AB)
+                        confidence = rfs_dict[AB] / rfs_dict[A]
+                        lift = confidence / rfs_dict[B]
+                        if confidence >= min_confidence and lift >= 1:
+                            association_rules.append((A, B, confidence, length_rule, lift))
+    return association_rules
+
+# -------------------------------------------------------------------------------
+
+def print_rules(association_rules, largest_k):
+    num_best_rules = 2
+    num_largest_k_rules = 0
+    best_rules = []
+    temp_best_rules = []
+
+    print("------------------------------------\n")
+    print("ASSOCIATION RULES FOUND: \n")
+    for rule in association_rules:
+        if rule[3] == largest_k:
+            num_largest_k_rules += 1
+        print("Rule: " + str(list(rule[0])) + " -> " + str(list(rule[1])))
+        print("Confidence: " + str(rule[2]))
+        print("Lift: " + str(rule[4]) + "\n")
+        temp_best_rules.append((rule[2] + rule[4]))
+    for i in range(num_best_rules):
+        max_temp = temp_best_rules.index(max(temp_best_rules))
+        best_rules.append(max_temp)
+        temp_best_rules.pop(max_temp)
+    print("Number of association rules for largest K-frequent itemsets: " + str(num_largest_k_rules))
+    print("\n")
+    print("------------------------------------\n")
+    print("BEST RULES FOUND: \n")
+    for i in best_rules:
+        print("Rule: " + str(list(association_rules[i][0])) + " -> " + str(list(association_rules[i][1])))
+        print("Confidence: " + str(association_rules[i][2]))
+        print("Lift: " + str(association_rules[i][4]) + "\n")
+    print("\n")
 
 # -------------------------------------------------------------------------------
 
 def main():
     min_support = 0.15
-    num_remaining_frequent_sets = apriori(min_support)
-    for k in num_remaining_frequent_sets:
-        print(len(num_remaining_frequent_sets[k]))
+    min_confidence = 0.6
+    num_best_rules = 2
+    remaining_frequent_sets, rfs_dict = apriori(min_support)
+    largest_k = max(remaining_frequent_sets.keys())
+    for k in remaining_frequent_sets:
+        print("K = " + str(k))
+        print("Number of frequent itemsets: " + str(len(remaining_frequent_sets[k])))
+        print("\n")
+    association_rules = generate_association_rules(remaining_frequent_sets, rfs_dict, min_confidence)
+    print_rules(association_rules, largest_k)
 
 # -------------------------------------------------------------------------------
 
