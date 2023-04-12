@@ -227,13 +227,13 @@ def generate_association_rules(remaining_frequent_sets, arr_sets_dict, min_confi
                     if consequent in rfs_dict:
                         antecedent = frozenset(antecedent)
                         union_antecedent_consequent = antecedent.union(consequent)
-
                         length_rule = len(union_antecedent_consequent)
+
                         confidence = rfs_dict[union_antecedent_consequent] / rfs_dict[antecedent]
                         lift = confidence / rfs_dict[consequent]
 
                         if confidence >= min_confidence and lift >= 1:
-                            association_rules.append((antecedent, consequent, confidence, length_rule, lift))
+                            association_rules.append((antecedent, consequent, confidence, lift, length_rule))
     return association_rules
 
 # -------------------------------------------------------------------------------
@@ -242,7 +242,7 @@ def print_rules(association_rules, largest_k, num_best_rules):
     """
     :param association_rules: list of all association rules that meet the minimum confidence and lift threshold
     :param largest_k: largest k for which there are frequent itemsets
-    :param num_best_rules: number of best rules to print (15)
+    :param num_best_rules: number of rules to print (15)
     :return: None
     """
     num_largest_k_rules = 0
@@ -252,38 +252,39 @@ def print_rules(association_rules, largest_k, num_best_rules):
     print("------------------------------------\n")
 
     for rule in association_rules:
-        if rule[3] == largest_k:
+        if rule[4] == largest_k:
             num_largest_k_rules += 1
     print("Number of association rules for largest K-frequent itemsets: " + str(num_largest_k_rules))
     print("\n")
 
     print("------------------------------------\n")
 
-    print("Best rules found based on Confidence: \n")
+    print("Best association rules found based on Confidence: \n")
     for i, entry in enumerate(sorted(association_rules, key=lambda x: x[2], reverse=True)[:15]):
         print("Rule: " + str(list(entry[0])) + " -> " + str(list(entry[1])))
         print("Confidence: " + str(entry[2]))
-        print("Lift: " + str(entry[4]) + "\n")
+        print("Lift: " + str(entry[3]) + "\n")
     print("\n")
-    
+
     print("------------------------------------\n")
 
-    print("Best rules found based on Lift: \n")
-    for i, entry in enumerate(sorted(association_rules, key=lambda x: x[4], reverse=True)[:15]):
+    print("Best association rules found based on Lift: \n")
+    for i, entry in enumerate(sorted(association_rules, key=lambda x: x[3], reverse=True)[:15]):
         print("Rule: " + str(list(entry[0])) + " -> " + str(list(entry[1])))
         print("Confidence: " + str(entry[2]))
-        print("Lift: " + str(entry[4]) + "\n")
+        print("Lift: " + str(entry[3]) + "\n")
     print("\n")
 
 # -------------------------------------------------------------------------------
 
 def main():
     min_support = 0.15
-    print("Minimum support: " + str(min_support))
+    print("\nMinimum support: " + str(min_support))
     min_confidence = 0.6
     print("Minimum confidence: " + str(min_confidence))
+    # Number of rules to print:
     num_best_rules = 15
-    # Number of best rules to print
+    print("\n------------------------------------\n")
 
     remaining_frequent_sets, rfs_dict = apriori(min_support)
     largest_k = max(remaining_frequent_sets.keys())
@@ -297,5 +298,5 @@ def main():
 # -------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    cProfile.run('main()', sort='time')
-    # main()
+    # cProfile.run('main()', sort='time')
+    main()
