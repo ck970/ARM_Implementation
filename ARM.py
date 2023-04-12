@@ -87,8 +87,13 @@ def join_step(remaining_frequent_sets, k):
     """
     k_frequent_sets = list()
     k_minus_one_frequent_items = remaining_frequent_sets[k - 1]
+    # If there are no frequent itemsets of length k-1, then there are no frequent itemsets of length k
     if len(k_minus_one_frequent_items) == 0:
         return k_frequent_sets
+    """
+    Iterate through all pairs of frequent itemsets of length k-1,
+    and join them if they are not already in k_frequent_sets
+    """
     for i in range(len(k_minus_one_frequent_items)):
         for j in range(i + 1, len(k_minus_one_frequent_items)):
             union_i_j = k_minus_one_frequent_items[i][0].union(k_minus_one_frequent_items[j][0])
@@ -116,10 +121,10 @@ def prune_check(set, k_minus_one_frequent_sets):
 
 def prune_step(remaining_frequent_sets, k_frequent_sets, k):
     """
-    :param remaining_frequent_sets:
-    :param k_frequent_sets:
-    :param k:
-    :return:
+    :param remaining_frequent_sets: list of all frequent itemsets of length k
+    :param k_frequent_sets: list of all frequent itemsets of length k
+    :param k: iterable, starts at 1, counts length of itemsets in a given iteration
+    :return: pruned list of all frequent itemsets of length k
     """
     counter = 0
     k_frequent_sets_pruned = list()
@@ -137,8 +142,9 @@ def prune_step(remaining_frequent_sets, k_frequent_sets, k):
 
 def apriori(min_support):
     """
-    :param min_support:
-    :return:
+    :param min_support: minimum support threshold
+    :return: number of reamining frequent itemsets of length k, indexed by k
+    :return: dictionary of all products and their corresponding index
     """
     df = load_file()
     columns = list(df.columns)
@@ -148,6 +154,7 @@ def apriori(min_support):
         arr_sets_dict[item] = index + 1
     length = len(arr_sets)
     num_remaining_frequent_sets = defaultdict(list)
+    # Used defaultdict here to avoid key errors
 
     for product in columns:
         support = get_support(arr_sets, length, {product})
@@ -169,8 +176,8 @@ def apriori(min_support):
 
 def generate_all_subsets(set):
     """
-    :param set:
-    :return:
+    :param set: given set of products
+    :return: list of all subsets of the given set
     """
     subsets = []
     possible_combinations = []
@@ -188,10 +195,10 @@ def generate_all_subsets(set):
 
 def generate_association_rules(remaining_frequent_sets, arr_sets_dict, min_confidence):
     """
-    :param remaining_frequent_sets:
-    :param arr_sets_dict:
-    :param min_confidence:
-    :return:
+    :param remaining_frequent_sets: list of all frequent itemsets with their support, indexed by length k
+    :param arr_sets_dict: dictionary of all products and their corresponding index
+    :param min_confidence: minimum confidence threshold
+    :return: list of all association rules with their antecedent, consequent, confidence, length k, and lift
     """
     temp_list = []
     association_rules = []
@@ -209,33 +216,32 @@ def generate_association_rules(remaining_frequent_sets, arr_sets_dict, min_confi
         length = len(item)
         if length > 1:
                 subsets = generate_all_subsets(item)
-                for A in subsets:
-                    B = item.difference(A)
-                    B = frozenset(B)
-                    if B:
-                        A = frozenset(A)
-                        AB = A.union(B)
-                        length_rule = len(AB)
-                        confidence = rfs_dict[AB] / rfs_dict[A]
-                        lift = confidence / rfs_dict[B]
+                for antecedent in subsets:
+                    consequent = item.difference(antecedent)
+                    consequent = frozenset(consequent)
+                    if consequent:
+                        antecedent = frozenset(antecedent)
+                        union_antecedent_consequent = antecedent.union(consequent)
+                        length_rule = len(union_antecedent_consequent)
+                        confidence = rfs_dict[union_antecedent_consequent] / rfs_dict[antecedent]
+                        lift = confidence / rfs_dict[consequent]
                         if confidence >= min_confidence and lift >= 1:
-                            association_rules.append((A, B, confidence, length_rule, lift))
+                            association_rules.append((antecedent, consequent, confidence, length_rule, lift))
     return association_rules
 
 # -------------------------------------------------------------------------------
 
 def print_rules(association_rules, largest_k, num_best_rules):
     """
-    :param association_rules:
-    :param largest_k:
-    :param num_best_rules:
-    :return:
+    :param association_rules: list of all association rules that meet the minimum confidence and lift threshold
+    :param largest_k: largest k for which there are frequent itemsets
+    :param num_best_rules: number of best rules to print (15)
+    :return: None
     """
     num_largest_k_rules = 0
     best_rules = []
     temp_best_rules = []
     print("------------------------------------\n")
-
     for rule in association_rules:
         if rule[3] == largest_k:
             num_largest_k_rules += 1
@@ -259,15 +265,12 @@ def print_rules(association_rules, largest_k, num_best_rules):
 # -------------------------------------------------------------------------------
 
 def main():
-    """
-    :return:
-    """
     min_support = 0.15
     print("Minimum support: " + str(min_support))
     min_confidence = 0.6
     print("Minimum confidence: " + str(min_confidence))
     num_best_rules = 15
-    print("Number of best rules to print: " + str(num_best_rules) + "\n")
+    # Number of best rules to print
 
     remaining_frequent_sets, rfs_dict = apriori(min_support)
     largest_k = max(remaining_frequent_sets.keys())
@@ -281,5 +284,5 @@ def main():
 # -------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    # cProfile.run('main()', sort='time')
-    main()
+    cProfile.run('main()', sort='time')
+    # main()
