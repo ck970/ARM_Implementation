@@ -156,7 +156,7 @@ def apriori(min_support):
 
     length = len(arr_sets)
     num_remaining_frequent_sets = defaultdict(list)
-    # Used defaultdict here to avoid key errors
+    # Used defaultdict here to avoid key errors, was only solution I could find that actually worked
 
     for product in columns:
         support = get_support(arr_sets, length, {product})
