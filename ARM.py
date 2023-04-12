@@ -248,20 +248,26 @@ def print_rules(association_rules, largest_k, num_best_rules):
     num_largest_k_rules = 0
     best_rules = []
     temp_best_rules = []
+
     print("------------------------------------\n")
+
     for rule in association_rules:
         if rule[3] == largest_k:
             num_largest_k_rules += 1
     print("Number of association rules for largest K-frequent itemsets: " + str(num_largest_k_rules))
     print("\n")
+
     print("------------------------------------\n")
+
     print("Best rules found based on Confidence: \n")
     for i, entry in enumerate(sorted(association_rules, key=lambda x: x[2], reverse=True)[:15]):
         print("Rule: " + str(list(entry[0])) + " -> " + str(list(entry[1])))
         print("Confidence: " + str(entry[2]))
         print("Lift: " + str(entry[4]) + "\n")
     print("\n")
+    
     print("------------------------------------\n")
+
     print("Best rules found based on Lift: \n")
     for i, entry in enumerate(sorted(association_rules, key=lambda x: x[4], reverse=True)[:15]):
         print("Rule: " + str(list(entry[0])) + " -> " + str(list(entry[1])))
