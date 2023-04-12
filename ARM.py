@@ -87,13 +87,13 @@ def join_step(remaining_frequent_sets, k):
     """
     k_frequent_sets = list()
     k_minus_one_frequent_items = remaining_frequent_sets[k - 1]
+
     # If there are no frequent itemsets of length k-1, then there are no frequent itemsets of length k
     if len(k_minus_one_frequent_items) == 0:
         return k_frequent_sets
-    """
-    Iterate through all pairs of frequent itemsets of length k-1,
-    and join them if they are not already in k_frequent_sets
-    """
+
+    # Iterate through all pairs of frequent itemsets of length k-1,
+    # and join them if they are not already in k_frequent_sets
     for i in range(len(k_minus_one_frequent_items)):
         for j in range(i + 1, len(k_minus_one_frequent_items)):
             union_i_j = k_minus_one_frequent_items[i][0].union(k_minus_one_frequent_items[j][0])
@@ -150,8 +150,10 @@ def apriori(min_support):
     columns = list(df.columns)
     arr_sets = process_transactions(df)
     arr_sets_dict = dict()
+
     for index, item in enumerate(columns):
         arr_sets_dict[item] = index + 1
+
     length = len(arr_sets)
     num_remaining_frequent_sets = defaultdict(list)
     # Used defaultdict here to avoid key errors
@@ -181,6 +183,7 @@ def generate_all_subsets(set):
     """
     subsets = []
     possible_combinations = []
+
     if len(set) > 1:
         for i in range(1, len(set) + 1):
             possible_combinations.append(list(combinations(set, i)))
@@ -212,6 +215,7 @@ def generate_association_rules(remaining_frequent_sets, arr_sets_dict, min_confi
                 temp_list.append(item)
             rfs_dict[frozenset(temp_list)] = itemset[1]
             temp_list = []
+
     for item, support in rfs_dict.items():
         length = len(item)
         if length > 1:
@@ -219,12 +223,15 @@ def generate_association_rules(remaining_frequent_sets, arr_sets_dict, min_confi
                 for antecedent in subsets:
                     consequent = item.difference(antecedent)
                     consequent = frozenset(consequent)
-                    if consequent:
+
+                    if consequent in rfs_dict:
                         antecedent = frozenset(antecedent)
                         union_antecedent_consequent = antecedent.union(consequent)
+
                         length_rule = len(union_antecedent_consequent)
                         confidence = rfs_dict[union_antecedent_consequent] / rfs_dict[antecedent]
                         lift = confidence / rfs_dict[consequent]
+
                         if confidence >= min_confidence and lift >= 1:
                             association_rules.append((antecedent, consequent, confidence, length_rule, lift))
     return association_rules
