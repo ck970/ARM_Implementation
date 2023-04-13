@@ -130,9 +130,11 @@ def prune_step(remaining_frequent_sets, k_frequent_sets, k):
     k_frequent_sets_pruned = list()
     if len(k_frequent_sets) == 0:
         return k_frequent_sets_pruned
+
     k_minus_one_frequent_sets = list()
     for sets, na in remaining_frequent_sets[k - 1]:
         k_minus_one_frequent_sets.append(sets)
+
     for set in k_frequent_sets:
         if prune_check(set, k_minus_one_frequent_sets):
             k_frequent_sets_pruned.append(set)
@@ -155,8 +157,8 @@ def apriori(min_support):
         arr_sets_dict[item] = index + 1
 
     length = len(arr_sets)
+    # Used defaultdict here to avoid key errors, was only solution I could find that actually worked:
     num_remaining_frequent_sets = defaultdict(list)
-    # Used defaultdict here to avoid key errors, was only solution I could find that actually worked
 
     for product in columns:
         support = get_support(arr_sets, length, {product})
@@ -168,6 +170,7 @@ def apriori(min_support):
         k_frequent_sets_pruned = prune_step(num_remaining_frequent_sets, k_frequent_sets, k)
         if len(k_frequent_sets_pruned) == 0:
             break
+
         for set in k_frequent_sets_pruned:
             support = get_support(arr_sets, length, set)
             if support >= min_support:
@@ -205,7 +208,9 @@ def generate_association_rules(remaining_frequent_sets, arr_sets_dict, min_confi
     """
     temp_list = []
     association_rules = []
+    # Store all frequent itemsets with their support:
     rfs_dict = dict()
+
     item_list = list(arr_sets_dict.keys())
     index_list = list(arr_sets_dict.values())
 
@@ -278,7 +283,7 @@ def print_rules(association_rules, largest_k, num_best_rules):
 # -------------------------------------------------------------------------------
 
 def main():
-    min_support = 0.15
+    min_support = 0.25
     print("\nMinimum support: " + str(min_support))
     min_confidence = 0.6
     print("Minimum confidence: " + str(min_confidence))
@@ -298,5 +303,5 @@ def main():
 # -------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    # cProfile.run('main()', sort='time')
-    main()
+    cProfile.run('main()', sort='time')
+    # main()
