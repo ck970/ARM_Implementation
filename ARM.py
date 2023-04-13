@@ -283,7 +283,7 @@ def print_rules(association_rules, largest_k, num_best_rules):
 # -------------------------------------------------------------------------------
 
 def main():
-    min_support = 0.25
+    min_support = 0.15
     print("\nMinimum support: " + str(min_support))
     min_confidence = 0.6
     print("Minimum confidence: " + str(min_confidence))
@@ -303,5 +303,5 @@ def main():
 # -------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    cProfile.run('main()', sort='time')
-    # main()
+    # cProfile.run('main()', sort='time')
+    main()
