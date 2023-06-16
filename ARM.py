@@ -5,6 +5,18 @@ import cProfile
 from collections import defaultdict
 from itertools import combinations
 
+'''
+SUMMARY:
+This project takes basket.arff file as input and generates association rules 
+for grocery store products based upon whether or not the product was present
+in a given transaction. 
+
+EVALUATION CRITERIA:
+    - MINIMUM SUPPORT: 0.15
+    - MINIMUM CONFIDENCE: 0.6
+    - MINIMUM LIFT: 1
+'''
+
 
 def load_file():
     '''
